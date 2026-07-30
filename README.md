@@ -6,6 +6,9 @@
 > Демонстрационный / портфолио-релиз. Не является медицинским изделием.  
 > Не используйте реальные клинические данные пациентов.
 
+**В портфолио показывает:** realtime UI, пул PostgreSQL, экспорт (CSV/PDF/XML), устойчивость при недоступной БД.  
+Другие публичные кейсы: [llm-agent-gateway](https://github.com/0ver1ay/llm-agent-gateway) · [KeyHolder-Demo](https://github.com/0ver1ay/KeyHolder-Demo) · [профиль](https://github.com/0ver1ay)
+
 ---
 
 ## Что это
