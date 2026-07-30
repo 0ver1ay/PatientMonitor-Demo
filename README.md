@@ -1,6 +1,6 @@
 # PatientMonitor
 
-Desktop-приложение для мониторинга витальных показателей пациентов  
+Настольное приложение для мониторинга витальных показателей пациентов.  
 **Python · Kivy · PostgreSQL**
 
 > Демонстрационный / портфолио-релиз. Не является медицинским изделием.  
@@ -10,25 +10,19 @@ Desktop-приложение для мониторинга витальных п
 
 ## Что это
 
-Многооконный монитор коек: live-показатели, исторические графики, настраиваемые раскладки и экспорт в CSV / XLS / PDF / XML.
+Многооконный монитор коек: показатели в реальном времени, исторические графики, настраиваемые раскладки и экспорт в CSV / XLS / PDF / XML.
 
-Стек заточен под Windows desktop и локальную/серверную PostgreSQL.
+Стек рассчитан на Windows и локальную или серверную PostgreSQL.
 
 ## Возможности
 
-- **Мульти-койка** — несколько окон мониторов, сетки 2–8 панелей
-- **Live-графики** — SpO₂, пульс, дыхание, температура, АД, газы и др.
+- **Несколько коек** — несколько окон мониторов, сетки на 2–8 панелей
+- **Графики в реальном времени** — SpO₂, пульс, дыхание, температура, АД, газы и др.
 - **История** — выбор исследования и временного диапазона, агрегация
-- **Редактор раскладок** — пресеты и кастомные grid-layout
-- **Экспорт** — CSV, SpreadsheetML, PDF (ReportLab), anesthesia XML
-- **Offline UX** — при недоступной БД баннер и retry, без подмены фейковыми данными
-- **Demo-режим** — синтетический генератор без PostgreSQL (по явному флагу)
-
-## Скриншоты
-
-| Главное окно | Монитор | Viewer | Offline |
-|---|---|---|---|
-| ![main](docs/screenshots/verify_main_desktop.png) | ![monitor](docs/screenshots/verify_monitor_desktop.png) | ![viewer](docs/screenshots/verify_viewer_desktop.png) | ![offline](docs/screenshots/ui_offline_desktop.png) |
+- **Редактор раскладок** — пресеты и пользовательские сетки
+- **Экспорт** — CSV, SpreadsheetML, PDF (ReportLab), XML для анестезии
+- **Работа без БД** — при недоступной базе баннер и повтор подключения, без подмены фейковыми данными
+- **Демо-режим** — синтетический генератор без PostgreSQL (по явному флагу)
 
 ## Архитектура
 
@@ -37,13 +31,13 @@ main.py / run_monitor_window.py / run_bed_viewer.py
         │
         ▼
 ┌───────────────────┐     ┌────────────────────┐
-│  Kivy UI          │────▶│  DataSource ABC    │
+│  Интерфейс Kivy   │────▶│  DataSource ABC    │
 │  components/      │     └─────────┬──────────┘
 └───────────────────┘               │
                         ┌───────────┴───────────┐
                         ▼                       ▼
                DataGenerator              DatabaseDataSource
-               (demo mode)                (PostgreSQL + pool)
+               (демо-режим)               (PostgreSQL + пул)
 ```
 
 Ключевые модули:
@@ -51,11 +45,11 @@ main.py / run_monitor_window.py / run_bed_viewer.py
 | Путь | Роль |
 |------|------|
 | `components/` | Экраны и виджеты (монитор, графики, раскладки, экспорт) |
-| `utils/database_source.py` | Запросы к БД, latest + history |
-| `utils/data_generator.py` | Синтетические live-сигналы |
+| `utils/database_source.py` | Запросы к БД: актуальные значения и история |
+| `utils/data_generator.py` | Синтетические сигналы для демо |
 | `utils/shared_db_pool.py` | Пул соединений PostgreSQL |
 | `utils/signal_registry.py` | Реестр сигналов из конфига |
-| `migrations/` | SQL-миграции (индексы для history/latest) |
+| `migrations/` | SQL-миграции (индексы для истории и актуальных значений) |
 
 ## Быстрый старт
 
@@ -74,7 +68,7 @@ copy config.ini.example config.local.ini
 # укажите host / port / user / password PostgreSQL
 ```
 
-Переопределение через env:
+Переопределение через переменные окружения:
 
 - `PATIENTMONITOR_DB_HOST`
 - `PATIENTMONITOR_DB_PORT`
@@ -82,7 +76,7 @@ copy config.ini.example config.local.ini
 - `PATIENTMONITOR_DB_USER`
 - `PATIENTMONITOR_DB_PASSWORD`
 
-### 3a. Demo без БД
+### 3a. Демо без базы данных
 
 В `config.local.ini`: `mode = demo`  
 и в окружении:
@@ -92,9 +86,9 @@ $env:PATIENTMONITOR_ALLOW_DEMO_MODE = "1"
 python main.py
 ```
 
-Без env-флага `mode=demo` игнорируется — остаётся безопасный `database`.
+Без флага окружения `mode=demo` игнорируется — остаётся безопасный режим `database`.
 
-### 3b. Полный demo с PostgreSQL
+### 3b. Полное демо с PostgreSQL
 
 ```powershell
 python create_database.py
@@ -106,7 +100,7 @@ python main.py
 python run_bed_viewer.py
 ```
 
-Генераторы live/history (только на demo-БД):
+Генераторы сигналов и истории (только на демо-БД):
 
 ```powershell
 python run_live_db_writer.py
@@ -123,15 +117,15 @@ python -m unittest discover -s tests -v
 ## Стек
 
 - Python 3.11+
-- [Kivy](https://kivy.org/) — UI
+- [Kivy](https://kivy.org/) — интерфейс
 - [psycopg2](https://www.psycopg.org/) — PostgreSQL
-- [ReportLab](https://www.reportlab.com/) — PDF-экспорт
+- [ReportLab](https://www.reportlab.com/) — экспорт в PDF
 
 ## Важно
 
 - `demo/med.sql` — **синтетический** набор (`Пациент-N`), не клинические данные
-- `config.ini` / `config.local.ini` не коммитятся — в репо только `config.ini.example`
-- Не запускайте seed/live-writer против не-demo базы
+- `config.ini` / `config.local.ini` не коммитятся — в репозитории только `config.ini.example`
+- Не запускайте seed / live-writer против не-демо базы
 - Вендорный bedside-стек и production-конфиги в этот репозиторий **не входят**
 
 ## Лицензия
